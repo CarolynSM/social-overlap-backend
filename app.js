@@ -1,22 +1,44 @@
-var express = require("express");
-var path = require("path");
-var favicon = require("serve-favicon");
-var logger = require("morgan");
-var cookieParser = require("cookie-parser");
-var bodyParser = require("body-parser");
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const favicon = require("serve-favicon");
+const logger = require("morgan");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const fetch = require("node-fetch");
 
-var app = express();
+const app = express();
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(cors());
 app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.get("/", (request, response) => {
+  response.json({ message: "Welcome to Social Overlap" });
+});
+
+app.get("/:userName", (request, response) => {
+  let data;
+  fetch("https://www.instagram.com/" + request.params.userName + "/?__a=1")
+    .then(res => res.json())
+    .then(res => {
+      data = {
+        userName: res.graphql.user.username,
+        userId: res.graphql.user.id,
+        totalFollowers: res.graphql.user.edge_follow.count,
+        profileImg: res.graphql.user.profile_pic_url,
+        isPrivate: res.graphql.user.is_private
+      };
+    })
+    .then(res => response.send({ profile: data }))
+    .catch(error => console.log(error));
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error("Not Found");
+  const err = new Error("Not Found");
   err.status = 404;
   next(err);
 });
@@ -29,5 +51,7 @@ app.use(function(err, req, res, next) {
     error: req.app.get("env") === "development" ? err : {}
   });
 });
+
+app.listen(process.env.PORT || 3000);
 
 module.exports = app;
