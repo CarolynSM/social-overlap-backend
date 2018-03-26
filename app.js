@@ -25,6 +25,7 @@ app.get("/:userName", (request, response) => {
     .then(res => {
       data = {
         userName: res.graphql.user.username,
+        fullName: res.graphql.user.full_name,
         userId: res.graphql.user.id,
         totalFollowers: res.graphql.user.edge_follow.count,
         profileImg: res.graphql.user.profile_pic_url,
