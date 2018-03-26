@@ -27,7 +27,7 @@ app.get("/:userName", (request, response) => {
         userName: res.graphql.user.username,
         fullName: res.graphql.user.full_name,
         userId: res.graphql.user.id,
-        totalFollowers: res.graphql.user.edge_follow.count,
+        totalFollowers: res.graphql.user.edge_followed_by.count,
         profileImg: res.graphql.user.profile_pic_url,
         isPrivate: res.graphql.user.is_private
       };
