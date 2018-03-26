@@ -19,8 +19,8 @@ function listFollowers(array) {
   let follower;
   array.forEach(item => {
     item = {
-      followerUserName: item.username,
-      followerId: item.id
+      followerUserName: item.node.username,
+      followerId: item.node.id
     };
     followers.push(item);
   });
