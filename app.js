@@ -5,9 +5,15 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
-const Nightmare = require("nightmare");
-const nightmare = Nightmare({ show: false });
 const { getFollowers } = require("./nightmare.js");
+const {
+  getPublicFollowersTotal,
+  getPublicFollowers,
+  getPublicPercentage,
+  getThirdDegreeFollowers,
+  sortAndCountDuplicates,
+  getTopFive
+} = require("./dataAnalysis.js");
 
 const app = express();
 
@@ -17,18 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-function listFollowers(array) {
-  const followers = [];
-  let follower;
-  array.forEach(item => {
-    item = {
-      followerUserName: item.node.username,
-      followerId: item.node.id
-    };
-    followers.push(item);
-  });
-  return followers;
-}
+let userFollowersList;
 
 app.get("/", (request, response) => {
   response.json({ message: "Welcome to Social Overlap" });
@@ -53,11 +48,21 @@ app.get("/:userName", (request, response) => {
 });
 
 app.get("/:userId/followers", (request, response, next) => {
-  const followers = [];
   const userId = request.params.userId;
-  const variables = { id: `${userId}`, first: 200, after: "" };
+  const variables = { id: `${userId}`, first: 425, after: "" };
   return getFollowers(userId)
-    .then(res => response.send({ data: res.data.user }))
+    .then(async res => {
+      const publicFollowersTotal = await getPublicFollowersTotal(res);
+      const publicFollowersArray = await getPublicFollowers(res);
+      const publicPercentage = await getPublicPercentage(res);
+      const masterFollowers = await getThirdDegreeFollowers(publicFollowersArray);
+      const sortedFollowers = await sortAndCountDuplicates(masterFollowers);
+      response.send({
+        total_public_followers: publicFollowersTotal,
+        percentage_public_followers: publicPercentage,
+        top_five: getTopFive(sortedFollowers)
+      });
+    })
     .catch(next);
 });
 
