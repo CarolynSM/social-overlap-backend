@@ -5,6 +5,7 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
+const { instagramLogin } = require("./nightmare.js");
 
 const app = express();
 
@@ -53,16 +54,19 @@ app.get("/:userId/followers", (request, response) => {
   const followers = [];
   const userId = request.params.userId;
   const variables = { id: `${userId}`, first: 200, after: "" };
-  fetch(
-    "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" +
-      JSON.stringify(variables)
-  )
-    .then(res => res.json())
-    .then(res => {
-      console.log(res.data.user.edge_followed_by.edges);
-      response.send({ list: listFollowers(res.data.user.edge_followed_by.edges) });
-    })
-    .catch(error => console.log("error:", error));
+  return async function() {
+    await instagramLogin();
+    await fetch(
+      "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" +
+        JSON.stringify(variables)
+    )
+      .then(res => res.json())
+      .then(res => {
+        console.log(res.data.user.edge_followed_by.edges);
+        response.send({ list: res });
+      })
+      .catch(error => console.log("error:", error));
+  };
 });
 
 // catch 404 and forward to error handler

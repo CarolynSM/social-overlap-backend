@@ -1,13 +1,28 @@
-var Nightmare = require("nightmare");
-var nightmare = Nightmare({ show: true });
+const Nightmare = require("nightmare");
+const nightmare = Nightmare({ show: false });
 
-nightmare
-  .goto("https://www.instagram.com/")
-  .click("._g9ean a")
-  .type("#f380dcd26b0d66c", "socialoverlap")
-  .type("#f4fa733919453", "soigSandyH00k")
-  .click("_qv64e _gexxb _4tgw8 _njrw0 button")
-  .end()
-  .catch(error => {
-    console.error("Search failed:", error);
-  });
+function instagramLogin() {
+  return nightmare
+    .goto("https://www.instagram.com/")
+    .click("a[href=\"/accounts/login/\"]")
+    .type("[autocapitalize=\"off\"][type=\"text\"]", "socialoverlap")
+    .type("[autocapitalize=\"off\"][type=\"password\"]", "soigSandyH00k")
+    .click("form span > button")
+    .wait("[role=\"dialog\"] > button")
+    .click("[role=\"dialog\"] > button")
+    .wait("main>section")
+    .scrollTo(900, 0)
+    .wait(500)
+    .scrollTo(1900, 0)
+    .wait(500)
+    .evaluate(() => {
+      return document.querySelector("main>section").innerHTML;
+    })
+    .end()
+    .catch(error => {
+      console.error("Search failed:", error);
+      return error;
+    });
+}
+
+module.exports = { instagramLogin };
