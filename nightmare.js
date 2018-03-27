@@ -1,7 +1,10 @@
 const Nightmare = require("nightmare");
 const nightmare = Nightmare({ show: false });
+const fs = require("fs");
 
-function instagramLogin() {
+function getFollowers(userId) {
+  const variables = { id: `${userId}`, first: 425, after: "" };
+  fs.writeFileSync("/tmp/nightmare.js", "window.variables = " + JSON.stringify(variables));
   return nightmare
     .goto("https://www.instagram.com/")
     .click("a[href=\"/accounts/login/\"]")
@@ -11,12 +14,15 @@ function instagramLogin() {
     .wait("[role=\"dialog\"] > button")
     .click("[role=\"dialog\"] > button")
     .wait("main>section")
-    .scrollTo(900, 0)
-    .wait(500)
-    .scrollTo(1900, 0)
-    .wait(500)
+    .inject("js", "/tmp/nightmare.js")
     .evaluate(() => {
-      return document.querySelector("main>section").innerHTML;
+      return fetch(
+        "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" +
+          JSON.stringify(window.variables),
+        {
+          credentials: "include"
+        }
+      ).then(res => res.json());
     })
     .end()
     .catch(error => {
@@ -25,4 +31,4 @@ function instagramLogin() {
     });
 }
 
-module.exports = { instagramLogin };
+module.exports = { getFollowers };

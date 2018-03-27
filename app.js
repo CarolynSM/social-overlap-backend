@@ -5,7 +5,9 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
-const { instagramLogin } = require("./nightmare.js");
+const Nightmare = require("nightmare");
+const nightmare = Nightmare({ show: false });
+const { getFollowers } = require("./nightmare.js");
 
 const app = express();
 
@@ -50,23 +52,13 @@ app.get("/:userName", (request, response) => {
     .catch(error => console.log(error));
 });
 
-app.get("/:userId/followers", (request, response) => {
+app.get("/:userId/followers", (request, response, next) => {
   const followers = [];
   const userId = request.params.userId;
   const variables = { id: `${userId}`, first: 200, after: "" };
-  return async function() {
-    await instagramLogin();
-    await fetch(
-      "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" +
-        JSON.stringify(variables)
-    )
-      .then(res => res.json())
-      .then(res => {
-        console.log(res.data.user.edge_followed_by.edges);
-        response.send({ list: res });
-      })
-      .catch(error => console.log("error:", error));
-  };
+  return getFollowers(userId)
+    .then(res => response.send({ data: res.data.user }))
+    .catch(next);
 });
 
 // catch 404 and forward to error handler
@@ -81,7 +73,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.json({
     message: err.message,
-    error: req.app.get("env") === "development" ? err : {}
+    error: req.app.get("env") !== "production" ? err.stack : {}
   });
 });
 
