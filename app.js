@@ -59,6 +59,7 @@ app.get("/:userId/followers", (request, response) => {
   )
     .then(res => res.json())
     .then(res => {
+      console.log(res.data.user.edge_followed_by.edges);
       response.send({ list: listFollowers(res.data.user.edge_followed_by.edges) });
     })
     .catch(error => console.log("error:", error));
