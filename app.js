@@ -5,7 +5,7 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
-const { getFollowers } = require("./nightmare.js");
+const { getFollowers, getFollowing } = require("./nightmare.js");
 const {
   getPublicFollowersTotal,
   getPublicFollowers,
@@ -54,15 +54,24 @@ app.get("/:userId/followers", (request, response, next) => {
     .then(async res => {
       const publicFollowersTotal = await getPublicFollowersTotal(res);
       const publicFollowersArray = await getPublicFollowers(res);
-      const publicPercentage = await getPublicPercentage(res);
+      const publicPercentage = await getPublicPercentage(res, publicFollowersTotal);
       const masterFollowers = await getThirdDegreeFollowers(publicFollowersArray);
-      const sortedFollowers = await sortAndCountDuplicates(masterFollowers);
+      // const sortedFollowers = await sortAndCountDuplicates(masterFollowers);
       response.send({
         total_public_followers: publicFollowersTotal,
         percentage_public_followers: publicPercentage,
-        top_five: getTopFive(sortedFollowers)
+        master_followers: masterFollowers
+        // top_five: getTopFive(sortedFollowers)
       });
     })
+    .catch(next);
+});
+
+app.get("/:userId/following", (request, response, next) => {
+  const userId = request.params.userId;
+  const variables = { id: `${userId}`, first: 425, after: "" };
+  return getFollowing(userId)
+    .then(res => response.send({ data: res }))
     .catch(next);
 });
 

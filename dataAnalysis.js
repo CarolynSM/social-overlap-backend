@@ -1,42 +1,35 @@
 const fetch = require("node-fetch");
-const { getFollowers } = require("./nightmare.js");
+const { getFollowers, getFollowing } = require("./nightmare.js");
+
+async function getProfile(user) {
+  let userName = user.node.username;
+  const res = await fetch("https://www.instagram.com/" + userName + "/?__a=1");
+  const profile = await res.json();
+  return {
+    id: profile.graphql.user.id,
+    username: profile.graphql.user.username,
+    is_private: profile.graphql.user.is_private
+  };
+}
 
 function getPublicFollowersTotal(list) {
-  const publicFollowers = [];
-  let followers = list.data.user.edge_followed_by.edges;
-  followers.forEach(user => {
-    let userName = user.node.username;
-    console.log(userName);
-    fetch("https://www.instagram.com/" + userName + "/?__a=1")
-      .then(res => res.json())
-      .then(res => {
-        if (!res.graphql.user.is_private) {
-          publicFollowers.push(user);
-        }
-      });
+  const followers = list.data.user.edge_followed_by.edges;
+  const profile = followers.map(user => getProfile(user));
+  return Promise.all(profile).then(res => {
+    return res.filter(user => user.is_private === false).length;
   });
-  return publicFollowers.length;
 }
 
 function getPublicFollowers(list) {
-  const publicFollowers = [];
-  let followers = list.data.user.edge_followed_by.edges;
-  followers.forEach(user => {
-    let userName = user.node.username;
-    fetch("https://www.instagram.com/" + userName + "/?__a=1")
-      .then(res => res.json())
-      .then(res => {
-        if (!res.graphql.user.is_private) {
-          publicFollowers.push(user);
-        }
-      });
+  const followers = list.data.user.edge_followed_by.edges;
+  const profile = followers.map(user => getProfile(user));
+  return Promise.all(profile).then(res => {
+    return res.filter(user => user.is_private === false);
   });
-  return publicFollowers;
 }
 
-function getPublicPercentage(list) {
+function getPublicPercentage(list, publicCount) {
   const totalCount = list.data.user.edge_followed_by.edges.length;
-  const publicCount = getPublicFollowers(list);
   const percentPublic = publicCount / totalCount * 100;
   return {
     total_followers: totalCount,
@@ -45,22 +38,28 @@ function getPublicPercentage(list) {
   };
 }
 
-function getThirdDegreeFollowers(publicList) {
-  const masterFollowers = [];
-  publicList.forEach(user => {
-    const userId = user.node.id;
-    const variables = { id: `${userId}`, first: 425, after: "" };
-    return getFollowers(userId)
-      .then(res => {
-        const followersArray = res.data.user.edge_followed_by.edges;
-        followersArray.forEach(user => {
-          const followerName = { name: user.node.username };
-          masterFollowers.push(followerName);
-        });
-      })
-      .catch(next);
-  });
-  return masterFollowers;
+async function getThirdDegreeFollowers(publicList) {
+  let firstUser = publicList[0];
+  console.log(firstUser.id);
+  const output = await getFollowing(firstUser.id);
+  console.log(output);
+
+  // const masterFollowers = [];
+  // const users = publicList.map(user => {
+  //   let userId = user.id;
+  //   return {
+  //     userId: userId,
+  //     variables: { id: `${userId}`, first: 100, after: "" }
+  //   };
+  // });
+  // const followingList = users.map(user => {
+  //   let userId = user.userId;
+  //   return getFollowers(userId);
+  // });
+  // return Promise.all(followingList).then(res => {
+  //   res.forEach(item => masterFollowers.push(item));
+  //   return masterFollowers;
+  // });
 }
 
 function sortAndCountDuplicates(list) {
