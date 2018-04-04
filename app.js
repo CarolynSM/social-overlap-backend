@@ -81,6 +81,7 @@ app.get("/:userId/following", (request, response, next) => {
 
 app.get("/:userId/follower-count", (request, response, next) => {
   const userId = request.params.userId;
+  console.log(userId);
   return getFollowers(userId).then(res => {
     response.send({ data: res.data });
   });
