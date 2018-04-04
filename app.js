@@ -29,8 +29,11 @@ app.get("/", (request, response) => {
   response.json({ message: "Welcome to Social Overlap" });
 });
 
-app.get("/:userName", (request, response) => {
+app.get("/:userName", (request, response, next) => {
   let data;
+  if (request.params.userName === "favicon.ico") {
+    return next();
+  }
   fetch("https://www.instagram.com/" + request.params.userName + "/?__a=1")
     .then(res => res.json())
     .then(res => {
