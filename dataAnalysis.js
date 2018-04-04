@@ -38,11 +38,10 @@ function getPublicPercentage(list, publicCount) {
   };
 }
 
-async function getThirdDegreeFollowers(publicList) {
+function getThirdDegreeFollowers(publicList) {
   let firstUser = publicList[0];
-  console.log(firstUser.id);
-  const output = await getFollowing(firstUser.id);
-  console.log(output);
+  const output = getFollowing(firstUser.id);
+  return Promise.all(output);
 
   // const masterFollowers = [];
   // const users = publicList.map(user => {

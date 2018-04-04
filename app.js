@@ -51,12 +51,16 @@ app.get("/:userId/followers", (request, response, next) => {
   const userId = request.params.userId;
   const variables = { id: `${userId}`, first: 425, after: "" };
   return getFollowers(userId)
-    .then(async res => {
-      const publicFollowersTotal = await getPublicFollowersTotal(res);
-      const publicFollowersArray = await getPublicFollowers(res);
-      const publicPercentage = await getPublicPercentage(res, publicFollowersTotal);
-      const masterFollowers = await getThirdDegreeFollowers(publicFollowersArray);
-      // const sortedFollowers = await sortAndCountDuplicates(masterFollowers);
+    .then(res => Promise.all([getPublicFollowersTotal(res), getPublicFollowers(res), res]))
+    .then(([publicFollowersTotal, publicFollowersArray, res]) =>
+      Promise.all([
+        publicFollowersTotal,
+        getPublicPercentage(res, publicFollowersTotal),
+        getThirdDegreeFollowers(publicFollowersArray)
+      ])
+    )
+    .then(([publicFollowersTotal, publicPercentage, masterFollowers]) => {
+      // const sortedFollowers = sortAndCountDuplicates(masterFollowers);
       response.send({
         total_public_followers: publicFollowersTotal,
         percentage_public_followers: publicPercentage,
@@ -73,6 +77,13 @@ app.get("/:userId/following", (request, response, next) => {
   return getFollowing(userId)
     .then(res => response.send({ data: res }))
     .catch(next);
+});
+
+app.get("/:userId/follower-count", (request, response, next) => {
+  const userId = request.params.userId;
+  return getFollowers(userId).then(res => {
+    response.send({ data: res.data });
+  });
 });
 
 // catch 404 and forward to error handler
