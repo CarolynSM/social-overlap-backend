@@ -25,6 +25,10 @@ function getFollowers(userId) {
       ).then(res => res.json());
     })
     .end()
+    .then(data => {
+      console.log("data", data);
+      return data;
+    })
     .catch(error => {
       console.error("Search failed:", error);
       return error;
