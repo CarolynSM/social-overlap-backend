@@ -29,7 +29,7 @@ app.get("/", (request, response) => {
   response.json({ message: "Welcome to Social Overlap" });
 });
 
-app.get("/:userName", (request, response, next) => {
+app.get("/api/:userName", (request, response, next) => {
   let data;
   if (request.params.userName === "favicon.ico") {
     return next();
@@ -50,7 +50,7 @@ app.get("/:userName", (request, response, next) => {
     .catch(error => console.log(error));
 });
 
-app.get("/:userId/followers", (request, response, next) => {
+app.get("/api/:userId/followers", (request, response, next) => {
   const userId = request.params.userId;
   const variables = { id: `${userId}`, first: 425, after: "" };
   return getFollowers(userId)
@@ -74,7 +74,7 @@ app.get("/:userId/followers", (request, response, next) => {
     .catch(next);
 });
 
-app.get("/:userId/following", (request, response, next) => {
+app.get("/api/:userId/following", (request, response, next) => {
   const userId = request.params.userId;
   const variables = { id: `${userId}`, first: 425, after: "" };
   return getFollowing(userId)
@@ -82,12 +82,14 @@ app.get("/:userId/following", (request, response, next) => {
     .catch(next);
 });
 
-app.get("/:userId/follower-count", (request, response, next) => {
+app.get("/api/:userId/follower-count", (request, response, next) => {
   const userId = request.params.userId;
   console.log(userId);
-  return getFollowers(userId).then(res => {
-    response.send({ data: res.data });
-  });
+  return getFollowers(userId)
+    .then(res => {
+      response.send({ data: res.data });
+    })
+    .catch(next);
 });
 
 // catch 404 and forward to error handler
